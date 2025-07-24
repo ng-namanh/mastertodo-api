@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  todos     Todo[]   @relation("CreatorTodos")
+  assignedTodos Todo[] @relation("AssignedTodos")
+  @@map("users")
+}
+
+model Todo {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  dueDate     DateTime
+  reminderDate DateTime?
+  status      Status   @default(PENDING)
+  priority    Priority @default(MEDIUM)
+  starred     Boolean  @default(false)
+  creatorId   Int
+  creator     User     @relation("CreatorTodos", fields: [creatorId], references: [id])
+  assignedTo  User[]   @relation("AssignedTodos")
+  subtasks    Subtask[]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  @@map("todos")
+}
+
+model Subtask {
+  id        Int      @id @default(autoincrement())
+  title     String
+  completed Boolean  @default(false)
+  todoId    Int
+  todo      Todo     @relation(fields: [todoId], references: [id])
+  @@map("subtasks")
+}
+
+enum Status {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
