@@ -3,17 +3,56 @@ import { DatabaseService } from '../services/database';
 import { AuthContext, CreateTodoRequest, UpdateTodoRequest } from '../types';
 
 export const createTodoRoutes = (dbService: DatabaseService): Router => {
-  const router = new Router();
+  const router = new Router({ prefix: '/todos' });
 
   /**
    * @swagger
    * /todos:
    *   get:
    *     summary: Get all todos
-   *     description: Retrieve all todos with user information
+   *     description: Retrieve all todos with user information and optional filtering
    *     tags: [Todos]
    *     security:
    *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: status
+   *         schema:
+   *           type: array
+   *           items:
+   *             type: string
+   *             enum: [all, PENDING, IN_PROGRESS, COMPLETED]
+   *         style: form
+   *         explode: false
+   *         description: Filter by status (comma-separated for multiple values)
+   *         example: "PENDING,IN_PROGRESS"
+   *       - in: query
+   *         name: assignedTo
+   *         schema:
+   *           type: array
+   *           items:
+   *             type: integer
+   *         style: form
+   *         explode: false
+   *         description: Filter by assigned user IDs (comma-separated for multiple values)
+   *         example: "1,2,3"
+   *       - in: query
+   *         name: starred
+   *         schema:
+   *           type: boolean
+   *         description: Filter by starred status
+   *         example: true
+   *       - in: query
+   *         name: priority
+   *         schema:
+   *           type: array
+   *           items:
+   *             type: string
+   *             enum: [HIGH, MEDIUM, LOW]
+   *         style: form
+   *         explode: false
+   *         description: Filter by priority (comma-separated for multiple values)
+   *         example: "HIGH,MEDIUM"
    *     responses:
    *       200:
    *         description: Todos retrieved successfully
@@ -31,13 +70,52 @@ export const createTodoRoutes = (dbService: DatabaseService): Router => {
   router.get('/', async (ctx: AuthContext) => {
     try {
       console.log('ctx.user', ctx.user);
-      const todos = await dbService.getAllTodos();
+
+      // Parse query parameters for filtering
+      const filters: any = {};
+
+      // Status filter
+      if (ctx.query.status) {
+        const statusArray = typeof ctx.query.status === 'string'
+          ? ctx.query.status.split(',').map(s => s.trim())
+          : ctx.query.status;
+        filters.status = statusArray;
+      }
+
+      // Assigned users filter
+      if (ctx.query.assignedTo) {
+        const assignedToArray = typeof ctx.query.assignedTo === 'string'
+          ? ctx.query.assignedTo.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id))
+          : Array.isArray(ctx.query.assignedTo)
+            ? ctx.query.assignedTo.map(id => parseInt(id as string)).filter(id => !isNaN(id))
+            : [parseInt(ctx.query.assignedTo as string)].filter(id => !isNaN(id));
+        if (assignedToArray.length > 0) {
+          filters.assignedTo = assignedToArray;
+        }
+      }
+
+      // Starred filter
+      if (ctx.query.starred !== undefined) {
+        filters.starred = ctx.query.starred === 'true';
+      }
+
+      // Priority filter
+      if (ctx.query.priority) {
+        const priorityArray = typeof ctx.query.priority === 'string'
+          ? ctx.query.priority.split(',').map(p => p.trim().toUpperCase())
+          : ctx.query.priority;
+        filters.priority = priorityArray;
+      }
+
+      const todos = await dbService.getAllTodos(Object.keys(filters).length > 0 ? filters : undefined);
       ctx.status = 200;
       ctx.body = {
         message: 'Todos retrieved successfully',
-        todos
+        todos,
+        filters: filters // Include applied filters in response for debugging
       };
     } catch (error) {
+      console.error('Error getting todos:', error);
       ctx.status = 500;
       ctx.body = { error: 'Internal server error' };
     }
@@ -138,55 +216,6 @@ export const createTodoRoutes = (dbService: DatabaseService): Router => {
 
   /**
    * @swagger
-   * /my-todos:
-   *   get:
-   *     summary: Get current user's todos
-   *     description: Retrieve todos belonging to the authenticated user
-   *     tags: [Todos]
-   *     security:
-   *       - bearerAuth: []
-   *     responses:
-   *       200:
-   *         description: User todos retrieved successfully
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/TodosResponse'
-   *       401:
-   *         description: Unauthorized - user not authenticated
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/ErrorResponse'
-   *       500:
-   *         description: Internal server error
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/ErrorResponse'
-   */
-  router.get('/my-todos', async (ctx: AuthContext) => {
-    try {
-      if (!ctx.user) {
-        ctx.status = 401;
-        ctx.body = { error: 'User not authenticated' };
-        return;
-      }
-
-      const todos = await dbService.getTodosByUserId(ctx.user.id);
-      ctx.status = 200;
-      ctx.body = {
-        message: 'User todos retrieved successfully',
-        todos
-      };
-    } catch (error) {
-      ctx.status = 500;
-      ctx.body = { error: 'Internal server error' };
-    }
-  });
-
-  /**
-   * @swagger
    * /todos/{id}:
    *   get:
    *     summary: Get specific todo by ID
@@ -251,8 +280,6 @@ export const createTodoRoutes = (dbService: DatabaseService): Router => {
       ctx.body = { error: 'Internal server error' };
     }
   });
-
-
 
   /**
    * @swagger
@@ -452,6 +479,61 @@ export const createTodoRoutes = (dbService: DatabaseService): Router => {
       ctx.status = 200;
       ctx.body = {
         message: 'Todo deleted successfully'
+      };
+    } catch (error) {
+      ctx.status = 500;
+      ctx.body = { error: 'Internal server error' };
+    }
+  });
+
+  return router;
+};
+
+export const createMyTodosRoutes = (dbService: DatabaseService): Router => {
+  const router = new Router();
+
+  /**
+   * @swagger
+   * /my-todos:
+   *   get:
+   *     summary: Get current user's todos
+   *     description: Retrieve todos belonging to the authenticated user
+   *     tags: [Todos]
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: User todos retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/TodosResponse'
+   *       401:
+   *         description: Unauthorized - user not authenticated
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ErrorResponse'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ErrorResponse'
+   */
+  router.get('/my-todos', async (ctx: AuthContext) => {
+    try {
+      if (!ctx.user) {
+        ctx.status = 401;
+        ctx.body = { error: 'User not authenticated' };
+        return;
+      }
+
+      const todos = await dbService.getTodosByUserId(ctx.user.id);
+      ctx.status = 200;
+      ctx.body = {
+        message: 'User todos retrieved successfully',
+        todos
       };
     } catch (error) {
       ctx.status = 500;

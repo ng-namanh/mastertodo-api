@@ -7,7 +7,8 @@ import { koaSwagger } from 'koa2-swagger-ui';
 import { swaggerSpec } from './config/swagger';
 import { createAuthMiddleware } from './middleware/auth';
 import { createAuthRoutes } from './routes/auth';
-import { createTodoRoutes } from './routes/todos';
+import { createMyTodosRoutes, createTodoRoutes } from './routes/todos';
+import { createUsersRoutes } from './routes/users';
 import { AuthService } from './services/auth';
 import { DatabaseService } from './services/database';
 
@@ -54,14 +55,24 @@ app.use(koaSwagger({
 
 const authRoutes = createAuthRoutes(authService, dbService);
 const todoRoutes = createTodoRoutes(dbService);
+const myTodosRoutes = createMyTodosRoutes(dbService);
+const usersRoutes = createUsersRoutes(dbService);
 
-createAuthMiddleware(authService, dbService);
+const authMiddleware = createAuthMiddleware(authService, dbService);
 
 app.use(authRoutes.routes());
 app.use(authRoutes.allowedMethods());
 
+todoRoutes.use(authMiddleware);
+myTodosRoutes.use(authMiddleware);
+usersRoutes.use(authMiddleware);
+
 app.use(todoRoutes.routes());
 app.use(todoRoutes.allowedMethods());
+app.use(myTodosRoutes.routes());
+app.use(myTodosRoutes.allowedMethods());
+app.use(usersRoutes.routes());
+app.use(usersRoutes.allowedMethods());
 
 app.use(async (ctx) => {
   if (ctx.path === '/health') {
@@ -90,12 +101,15 @@ app.use(async (ctx) => {
           logout: 'POST /logout'
         },
         todos: {
-          getAll: 'GET /todos',
+          getAll: 'GET /todos (with filters: ?status=PENDING,IN_PROGRESS&assignedTo=1,2&starred=true&priority=HIGH,MEDIUM)',
           getMyTodos: 'GET /my-todos',
           getById: 'GET /todos/:id',
           create: 'POST /todos',
           update: 'PUT /todos/:id',
           delete: 'DELETE /todos/:id'
+        },
+        users: {
+          getAll: 'GET /users'
         }
       }
     };

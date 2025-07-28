@@ -10,7 +10,7 @@ export const createAuthRoutes = (authService: AuthService, dbService: DatabaseSe
    * @swagger
    * /register:
    *   post:
-   *     summary: Register a new guys
+   *     summary: Register a new user
    *     description: Create a new user account with username, email, and password
    *     tags: [Authentication]
    *     requestBody:

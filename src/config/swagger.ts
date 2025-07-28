@@ -75,13 +75,50 @@ const options: swaggerJSDoc.Options = {
               type: 'string',
               description: 'Todo description'
             },
-            completed: {
-              type: 'boolean',
-              description: 'Todo completion status'
+            dueDate: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Due date for the todo'
             },
-            userId: {
+            reminderDate: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Reminder date for the todo'
+            },
+            status: {
+              type: 'string',
+              enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED'],
+              description: 'Todo status'
+            },
+            priority: {
+              type: 'string',
+              enum: ['HIGH', 'MEDIUM', 'LOW'],
+              description: 'Todo priority'
+            },
+            starred: {
+              type: 'boolean',
+              description: 'Whether the todo is starred'
+            },
+            creatorId: {
               type: 'integer',
-              description: 'User ID who owns this todo'
+              description: 'User ID who created this todo'
+            },
+            creator: {
+              $ref: '#/components/schemas/User'
+            },
+            assignedTo: {
+              type: 'array',
+              items: {
+                $ref: '#/components/schemas/User'
+              },
+              description: 'Users assigned to this todo'
+            },
+            subtasks: {
+              type: 'array',
+              items: {
+                $ref: '#/components/schemas/Subtask'
+              },
+              description: 'Subtasks for this todo'
             },
             createdAt: {
               type: 'string',
@@ -92,15 +129,27 @@ const options: swaggerJSDoc.Options = {
               type: 'string',
               format: 'date-time',
               description: 'Todo last update date'
+            }
+          }
+        },
+        Subtask: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'integer',
+              description: 'Subtask ID'
             },
-            user: {
-              type: 'object',
-              properties: {
-                username: {
-                  type: 'string',
-                  description: 'Username of the todo owner'
-                }
-              }
+            title: {
+              type: 'string',
+              description: 'Subtask title'
+            },
+            completed: {
+              type: 'boolean',
+              description: 'Subtask completion status'
+            },
+            todoId: {
+              type: 'integer',
+              description: 'Todo ID this subtask belongs to'
             }
           }
         },
@@ -141,7 +190,7 @@ const options: swaggerJSDoc.Options = {
         },
         CreateTodoRequest: {
           type: 'object',
-          required: ['title'],
+          required: ['title', 'dueDate'],
           properties: {
             title: {
               type: 'string',
@@ -150,6 +199,59 @@ const options: swaggerJSDoc.Options = {
             description: {
               type: 'string',
               description: 'Todo description'
+            },
+            dueDate: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Due date for the todo'
+            },
+            reminderDate: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Reminder date for the todo'
+            },
+            status: {
+              type: 'string',
+              enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED'],
+              description: 'Todo status',
+              default: 'PENDING'
+            },
+            priority: {
+              type: 'string',
+              enum: ['HIGH', 'MEDIUM', 'LOW'],
+              description: 'Todo priority',
+              default: 'MEDIUM'
+            },
+            starred: {
+              type: 'boolean',
+              description: 'Whether the todo is starred',
+              default: false
+            },
+            assignedTo: {
+              type: 'array',
+              items: {
+                type: 'integer'
+              },
+              description: 'Array of user IDs to assign this todo to'
+            },
+            subtasks: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  title: {
+                    type: 'string',
+                    description: 'Subtask title'
+                  },
+                  completed: {
+                    type: 'boolean',
+                    description: 'Subtask completion status',
+                    default: false
+                  }
+                },
+                required: ['title']
+              },
+              description: 'Subtasks for this todo'
             }
           }
         },
@@ -164,9 +266,58 @@ const options: swaggerJSDoc.Options = {
               type: 'string',
               description: 'Todo description'
             },
-            completed: {
+            dueDate: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Due date for the todo'
+            },
+            reminderDate: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Reminder date for the todo'
+            },
+            status: {
+              type: 'string',
+              enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED'],
+              description: 'Todo status'
+            },
+            priority: {
+              type: 'string',
+              enum: ['HIGH', 'MEDIUM', 'LOW'],
+              description: 'Todo priority'
+            },
+            starred: {
               type: 'boolean',
-              description: 'Todo completion status'
+              description: 'Whether the todo is starred'
+            },
+            assignedTo: {
+              type: 'array',
+              items: {
+                type: 'integer'
+              },
+              description: 'Array of user IDs to assign this todo to'
+            },
+            subtasks: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: {
+                    type: 'integer',
+                    description: 'Subtask ID (for updating existing subtasks)'
+                  },
+                  title: {
+                    type: 'string',
+                    description: 'Subtask title'
+                  },
+                  completed: {
+                    type: 'boolean',
+                    description: 'Subtask completion status'
+                  }
+                },
+                required: ['title']
+              },
+              description: 'Subtasks for this todo'
             }
           }
         },
@@ -209,6 +360,33 @@ const options: swaggerJSDoc.Options = {
               type: 'array',
               items: {
                 $ref: '#/components/schemas/Todo'
+              }
+            },
+            filters: {
+              type: 'object',
+              description: 'Applied filters (for debugging)',
+              properties: {
+                status: {
+                  type: 'array',
+                  items: {
+                    type: 'string'
+                  }
+                },
+                assignedTo: {
+                  type: 'array',
+                  items: {
+                    type: 'integer'
+                  }
+                },
+                starred: {
+                  type: 'boolean'
+                },
+                priority: {
+                  type: 'array',
+                  items: {
+                    type: 'string'
+                  }
+                }
               }
             }
           }

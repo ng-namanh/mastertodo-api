@@ -87,9 +87,57 @@ export class DatabaseService {
     });
   };
 
-  getAllTodos = async (): Promise<(Todo & { assignedTo: User[]; subtasks: Subtask[] })[]> => {
+  getAllTodos = async (filters?: {
+    status?: string[];
+    assignedTo?: number[];
+    starred?: boolean;
+    priority?: string[];
+  }): Promise<any[]> => {
+    const where: any = {};
+
+    // Status filter
+    if (filters?.status && filters.status.length > 0 && !filters.status.includes('all')) {
+      where.status = { in: filters.status };
+    }
+
+    // Assigned users filter
+    if (filters?.assignedTo && filters.assignedTo.length > 0) {
+      where.assignedTo = { some: { id: { in: filters.assignedTo } } };
+    }
+
+    // Starred filter
+    if (filters?.starred !== undefined) {
+      where.starred = filters.starred;
+    }
+
+    // Priority filter
+    if (filters?.priority && filters.priority.length > 0) {
+      where.priority = { in: filters.priority };
+    }
+
     return await this.prisma.todo.findMany({
-      include: { assignedTo: true, subtasks: true },
+      where,
+      include: {
+        assignedTo: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            createdAt: true,
+            updatedAt: true
+          }
+        },
+        subtasks: true,
+        creator: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            createdAt: true,
+            updatedAt: true
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' }
     });
   };

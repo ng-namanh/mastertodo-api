@@ -13,11 +13,24 @@ export interface Todo {
   id: number;
   title: string;
   description?: string;
-  completed: boolean;
-  userId: number;
+  dueDate: Date;
+  reminderDate?: Date;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  starred: boolean;
+  creatorId: number;
   createdAt: Date;
   updatedAt: Date;
-  user?: User;
+  creator?: User;
+  assignedTo?: User[];
+  subtasks?: Subtask[];
+}
+
+export interface Subtask {
+  id: number;
+  title: string;
+  completed: boolean;
+  todoId: number;
 }
 
 export interface CreateUserRequest {

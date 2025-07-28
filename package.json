@@ -12,6 +12,9 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seeds/index.ts",
+    "db:seed:users": "tsx prisma/seeds/seed-users.ts",
+    "db:seed:todos": "tsx prisma/seeds/seed-todos.ts",
     "setup": "powershell -ExecutionPolicy Bypass -File setup-db.ps1",
     "setup:unix": "bash setup-db.sh",
     "swagger:generate": "tsx scripts/generate-swagger.ts"
@@ -36,19 +39,19 @@
     "swagger-jsdoc": "^6.2.8"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jest": "^29.5.0",
+    "@types/jsonwebtoken": "^9.0.5",
     "@types/koa": "^2.15.0",
-    "@types/koa-router": "^7.4.8",
     "@types/koa-bodyparser": "^4.3.12",
     "@types/koa-cors": "^0.0.5",
+    "@types/koa-router": "^7.4.8",
     "@types/koa-session": "^6.0.0",
-    "@types/bcryptjs": "^2.4.6",
-    "@types/jsonwebtoken": "^9.0.5",
-    "@types/node": "^20.10.0",
-    "typescript": "^5.3.0",
-    "tsx": "^4.6.0",
+    "@types/node": "^24.1.0",
+    "@types/swagger-jsdoc": "^6.0.4",
     "jest": "^29.7.0",
-    "@types/jest": "^29.5.0",
     "prisma": "^5.7.0",
-    "@types/swagger-jsdoc": "^6.0.4"
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0"
   }
-} 
+}
