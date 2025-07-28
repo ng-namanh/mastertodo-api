@@ -19,6 +19,9 @@
   "keywords": ["koa", "typescript", "todo", "authentication"],
   "author": "",
   "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "dependencies": {
     "koa": "^2.15.0",
     "koa-router": "^12.0.1",
