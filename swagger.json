@@ -15,7 +15,7 @@
   },
   "servers": [
     {
-      "url": "http://localhost:3000",
+      "url": "https://api.namanh.id.vn",
       "description": "Development server"
     }
   ],
