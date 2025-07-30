@@ -6,45 +6,6 @@ import { CreateUserRequest, LoginRequest } from '../types';
 export const createAuthRoutes = (authService: AuthService, dbService: DatabaseService): Router => {
   const router = new Router();
 
-  /**
-   * @swagger
-   * /register:
-   *   post:
-   *     summary: Register a new user
-   *     description: Create a new user account with username, email, and password
-   *     tags: [Authentication]
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             $ref: '#/components/schemas/CreateUserRequest'
-   *     responses:
-   *       201:
-   *         description: User registered successfully
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/AuthResponse'
-   *       400:
-   *         description: Bad request - validation error
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/ErrorResponse'
-   *       409:
-   *         description: Conflict - user already exists
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/ErrorResponse'
-   *       500:
-   *         description: Internal server error
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/ErrorResponse'
-   */
   router.post('/register', async (ctx) => {
     try {
       const { username, email, password }: CreateUserRequest = ctx.request.body as CreateUserRequest;
@@ -70,7 +31,6 @@ export const createAuthRoutes = (authService: AuthService, dbService: DatabaseSe
         return;
       }
 
-      // Check if user already exists
       const existingUser = await dbService.getUserByEmail(email);
       if (existingUser) {
         ctx.status = 409;
@@ -82,7 +42,6 @@ export const createAuthRoutes = (authService: AuthService, dbService: DatabaseSe
         return;
       }
 
-      // Hash password and create user
       const hashedPassword = await authService.hashPassword(password);
       const user = await dbService.createUser({
         username,
@@ -90,10 +49,8 @@ export const createAuthRoutes = (authService: AuthService, dbService: DatabaseSe
         password: hashedPassword
       });
 
-      // Generate token
       const token = authService.generateToken(user);
 
-      // Remove password from response
       const { password: _, ...userWithoutPassword } = user;
 
       ctx.status = 201;
@@ -115,50 +72,10 @@ export const createAuthRoutes = (authService: AuthService, dbService: DatabaseSe
     }
   });
 
-  /**
-   * @swagger
-   * /login:
-   *   post:
-   *     summary: Login user
-   *     description: Authenticate user with email and password
-   *     tags: [Authentication]
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             $ref: '#/components/schemas/LoginRequest'
-   *     responses:
-   *       200:
-   *         description: Login successful
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/AuthResponse'
-   *       400:
-   *         description: Bad request - validation error
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/ErrorResponse'
-   *       401:
-   *         description: Unauthorized - invalid credentials
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/ErrorResponse'
-   *       500:
-   *         description: Internal server error
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/ErrorResponse'
-   */
   router.post('/login', async (ctx) => {
     try {
       const { email, password }: LoginRequest = ctx.request.body as LoginRequest;
 
-      // Validate input
       if (!email || !password) {
         ctx.status = 400;
         ctx.body = {
@@ -169,7 +86,6 @@ export const createAuthRoutes = (authService: AuthService, dbService: DatabaseSe
         return;
       }
 
-      // Find user by email
       const user = await dbService.getUserByEmail(email);
       if (!user) {
         ctx.status = 401;
@@ -181,7 +97,6 @@ export const createAuthRoutes = (authService: AuthService, dbService: DatabaseSe
         return;
       }
 
-      // Verify password
       const isValidPassword = await authService.comparePassword(password, user.password);
       if (!isValidPassword) {
         ctx.status = 401;
@@ -193,10 +108,8 @@ export const createAuthRoutes = (authService: AuthService, dbService: DatabaseSe
         return;
       }
 
-      // Generate token
       const token = authService.generateToken(user);
 
-      // Remove password from response
       const { password: _, ...userWithoutPassword } = user;
 
       ctx.status = 200;
@@ -218,28 +131,13 @@ export const createAuthRoutes = (authService: AuthService, dbService: DatabaseSe
     }
   });
 
-  /**
-   * @swagger
-   * /logout:
-   *   post:
-   *     summary: Logout user
-   *     description: Logout user (client-side token removal)
-   *     tags: [Authentication]
-   *     responses:
-   *       200:
-   *         description: Logout successful
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 message:
-   *                   type: string
-   *                   example: "Logout successful"
-   */
   router.post('/logout', async (ctx) => {
     ctx.status = 200;
-    ctx.body = { message: 'Logout successful' };
+    ctx.body = {
+      message: 'Logout successful',
+      data: null,
+      status: 200
+    };
   });
 
   return router;

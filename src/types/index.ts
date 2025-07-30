@@ -47,12 +47,12 @@ export interface LoginRequest {
 export interface CreateTodoRequest {
   title: string;
   description?: string;
-  dueDate: string; // ISO string
-  reminderDate?: string; // ISO string
+  dueDate: string;
+  reminderDate?: string;
   status?: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
   priority?: 'HIGH' | 'MEDIUM' | 'LOW';
   starred?: boolean;
-  assignedTo?: number[]; // user ids
+  assignedTo?: number[];
   subtasks?: { title: string; completed?: boolean }[];
 }
 

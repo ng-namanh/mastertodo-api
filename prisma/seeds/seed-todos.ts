@@ -96,14 +96,12 @@ const initialTodos: TodoData[] = [
   },
 ];
 
-// Mapping frontend status to backend enum
 const statusMapping = {
   "Pending": "PENDING",
   "In Progress": "IN_PROGRESS",
   "Completed": "COMPLETED"
 } as const;
 
-// Mapping frontend priority to backend enum
 const priorityMapping = {
   "High": "HIGH",
   "Medium": "MEDIUM",
@@ -113,7 +111,6 @@ const priorityMapping = {
 async function seedTodos() {
   console.log('Starting todo seeding...');
 
-  // Get all users first
   const users = await prisma.user.findMany();
 
   if (users.length === 0) {
@@ -121,18 +118,15 @@ async function seedTodos() {
     return;
   }
 
-  // Create a map of usernames to user IDs
   const userMap = new Map<string, number>();
   users.forEach(user => {
     userMap.set(user.username, user.id);
   });
 
-  // Use the first user as the creator for all todos (Emily Carter)
   const creatorUser = users.find(u => u.username === "Emily Carter") || users[0];
 
   for (const todoData of initialTodos) {
     try {
-      // Check if todo already exists
       const existingTodo = await prisma.todo.findFirst({
         where: { title: todoData.title }
       });
@@ -142,7 +136,6 @@ async function seedTodos() {
         continue;
       }
 
-      // Get assigned user IDs
       const assignedUserIds = todoData.assignedTo
         .map(userName => userMap.get(userName))
         .filter((id): id is number => id !== undefined);
@@ -152,7 +145,6 @@ async function seedTodos() {
         continue;
       }
 
-      // Create the todo
       const todo = await prisma.todo.create({
         data: {
           title: todoData.title,
@@ -168,7 +160,6 @@ async function seedTodos() {
         },
       });
 
-      // Create subtasks
       const subtasks: Array<{
         title: string;
         completed: boolean;

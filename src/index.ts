@@ -3,8 +3,6 @@ import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import cors from 'koa-cors';
 import session from 'koa-session';
-import { koaSwagger } from 'koa2-swagger-ui';
-import { swaggerSpec } from './config/swagger';
 import { createAuthMiddleware } from './middleware/auth';
 import { createAuthRoutes } from './routes/auth';
 import { createMyTodosRoutes, createTodoRoutes } from './routes/todos';
@@ -46,12 +44,6 @@ app.use(async (ctx, next) => {
   }
 });
 
-app.use(koaSwagger({
-  routePrefix: '/swagger',
-  swaggerOptions: {
-    spec: swaggerSpec as any,
-  },
-}));
 
 const authRoutes = createAuthRoutes(authService, dbService);
 const todoRoutes = createTodoRoutes(dbService);
@@ -90,10 +82,6 @@ app.use(async (ctx) => {
     ctx.body = {
       message: 'Welcome to Todo API',
       version: '1.0.0',
-      documentation: {
-        swagger: '/swagger',
-        health: '/health'
-      },
       endpoints: {
         auth: {
           register: 'POST /register',
@@ -101,7 +89,7 @@ app.use(async (ctx) => {
           logout: 'POST /logout'
         },
         todos: {
-          getAll: 'GET /todos (with filters: ?status=PENDING,IN_PROGRESS&assignedTo=1,2&starred=true&priority=HIGH,MEDIUM)',
+          getAll: 'GET /todos',
           getMyTodos: 'GET /my-todos',
           getById: 'GET /todos/:id',
           create: 'POST /todos',
@@ -115,20 +103,11 @@ app.use(async (ctx) => {
     };
     return;
   }
-
-  if (ctx.path === '/swagger.json') {
-    ctx.status = 200;
-    ctx.body = swaggerSpec;
-    return;
-  }
 });
 
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`📝 API Documentation: http://localhost:${PORT}/`);
-  console.log(`🔍 Swagger UI: http://localhost:${PORT}/swagger`);
-  console.log(`📄 OpenAPI Spec: http://localhost:${PORT}/swagger.json`);
 });
 
 process.on('SIGINT', async () => {

@@ -8,10 +8,7 @@ async function main() {
   console.log('Starting database seeding...');
 
   try {
-    // Seed users first
     await seedUsers();
-
-    // Then seed todos
     await seedTodos();
 
     console.log('Database seeding completed successfully!');

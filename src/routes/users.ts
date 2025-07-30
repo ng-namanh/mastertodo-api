@@ -42,7 +42,10 @@ export const createUsersRoutes = (dbService: DatabaseService): Router => {
       ctx.status = 200;
       ctx.body = {
         message: 'Users retrieved successfully',
-        users
+        data: {
+          users
+        },
+        status: 200
       };
     } catch (error) {
       console.error('Error getting users:', error);
