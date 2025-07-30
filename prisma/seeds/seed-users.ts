@@ -4,6 +4,8 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 const users = [
+  'Admin',
+  'Test',
   "Emily Carter",
   "Liam Walker",
   "Sophie Lee",
