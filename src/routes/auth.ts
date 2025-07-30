@@ -52,13 +52,21 @@ export const createAuthRoutes = (authService: AuthService, dbService: DatabaseSe
       // Validate input
       if (!username || !email || !password) {
         ctx.status = 400;
-        ctx.body = { error: 'Username, email, and password are required' };
+        ctx.body = {
+          error: 'Username, email, and password are required',
+          message: 'Please provide all required fields',
+          status: 400
+        };
         return;
       }
 
       if (password.length < 6) {
         ctx.status = 400;
-        ctx.body = { error: 'Password must be at least 6 characters long' };
+        ctx.body = {
+          error: 'Password must be at least 6 characters long',
+          message: 'Password validation failed',
+          status: 400
+        };
         return;
       }
 
@@ -66,7 +74,11 @@ export const createAuthRoutes = (authService: AuthService, dbService: DatabaseSe
       const existingUser = await dbService.getUserByEmail(email);
       if (existingUser) {
         ctx.status = 409;
-        ctx.body = { error: 'User with this email already exists' };
+        ctx.body = {
+          error: 'User with this email already exists',
+          message: 'Registration failed - email already in use',
+          status: 409
+        };
         return;
       }
 
@@ -87,12 +99,19 @@ export const createAuthRoutes = (authService: AuthService, dbService: DatabaseSe
       ctx.status = 201;
       ctx.body = {
         message: 'User registered successfully',
-        user: userWithoutPassword,
-        token
+        data: {
+          user: userWithoutPassword,
+          token
+        },
+        status: 201
       };
     } catch (error) {
       ctx.status = 500;
-      ctx.body = { error: 'Internal server error' };
+      ctx.body = {
+        error: 'Internal server error',
+        message: 'An unexpected error occurred during registration',
+        status: 500
+      };
     }
   });
 
@@ -142,7 +161,11 @@ export const createAuthRoutes = (authService: AuthService, dbService: DatabaseSe
       // Validate input
       if (!email || !password) {
         ctx.status = 400;
-        ctx.body = { error: 'Email and password are required' };
+        ctx.body = {
+          error: 'Email and password are required',
+          message: 'Please provide both email and password',
+          status: 400
+        };
         return;
       }
 
@@ -150,7 +173,11 @@ export const createAuthRoutes = (authService: AuthService, dbService: DatabaseSe
       const user = await dbService.getUserByEmail(email);
       if (!user) {
         ctx.status = 401;
-        ctx.body = { error: 'Invalid email or password' };
+        ctx.body = {
+          error: 'Invalid email or password',
+          message: 'Login failed - please check your credentials',
+          status: 401
+        };
         return;
       }
 
@@ -158,7 +185,11 @@ export const createAuthRoutes = (authService: AuthService, dbService: DatabaseSe
       const isValidPassword = await authService.comparePassword(password, user.password);
       if (!isValidPassword) {
         ctx.status = 401;
-        ctx.body = { error: 'Invalid email or password' };
+        ctx.body = {
+          error: 'Invalid email or password',
+          message: 'Login failed - please check your credentials',
+          status: 401
+        };
         return;
       }
 
@@ -171,12 +202,19 @@ export const createAuthRoutes = (authService: AuthService, dbService: DatabaseSe
       ctx.status = 200;
       ctx.body = {
         message: 'Login successful',
-        user: userWithoutPassword,
-        token
+        data: {
+          user: userWithoutPassword,
+          token
+        },
+        status: 200
       };
     } catch (error) {
       ctx.status = 500;
-      ctx.body = { error: 'Internal server error' };
+      ctx.body = {
+        error: 'Internal server error',
+        message: 'An unexpected error occurred during login',
+        status: 500
+      };
     }
   });
 

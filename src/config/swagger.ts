@@ -1,5 +1,23 @@
 import swaggerJSDoc from 'swagger-jsdoc';
 
+const getServers = () => {
+  const servers = [];
+
+  if (process.env.SERVER_URL) {
+    servers.push({
+      url: process.env.SERVER_URL,
+      description: 'Production server'
+    });
+  }
+
+  servers.push({
+    url: 'http://localhost:3000',
+    description: 'Development server'
+  });
+
+  return servers;
+};
+
 const options: swaggerJSDoc.Options = {
   definition: {
     openapi: '3.0.0',
@@ -16,12 +34,7 @@ const options: swaggerJSDoc.Options = {
         url: 'https://opensource.org/licenses/MIT'
       }
     },
-    servers: [
-      {
-        url: process.env.SERVER_URL || 'http://localhost:3000',
-        description: 'Development server'
-      }
-    ],
+    servers: getServers(),
     components: {
       securitySchemes: {
         bearerAuth: {
