@@ -7,6 +7,7 @@ export const createAuthMiddleware = (authService: AuthService, dbService: Databa
   return async (ctx: AuthContext, next: Next): Promise<void> => {
     try {
       const authHeader = ctx.headers.authorization;
+      console.log('Authorization header:', authHeader);
       if (!authHeader) {
         ctx.status = 401;
         ctx.body = { error: 'Authorization header required' };

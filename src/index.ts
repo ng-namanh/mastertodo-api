@@ -51,14 +51,9 @@ const myTodosRoutes = createMyTodosRoutes(dbService);
 const usersRoutes = createUsersRoutes(dbService);
 
 const authMiddleware = createAuthMiddleware(authService, dbService);
-
+app.use(authMiddleware)
 app.use(authRoutes.routes());
 app.use(authRoutes.allowedMethods());
-
-todoRoutes.use(authMiddleware);
-myTodosRoutes.use(authMiddleware);
-usersRoutes.use(authMiddleware);
-
 app.use(todoRoutes.routes());
 app.use(todoRoutes.allowedMethods());
 app.use(myTodosRoutes.routes());

@@ -206,15 +206,6 @@ export const createTodoRoutes = (dbService: DatabaseService): Router => {
         };
         return;
       }
-      if (existingTodo.creatorId !== ctx.user.id) {
-        ctx.status = 403;
-        ctx.body = {
-          error: 'You can only edit your own todos',
-          message: 'Access denied. You can only update todos you created',
-          status: 403
-        };
-        return;
-      }
       const updates = ctx.request.body as UpdateTodoRequest;
       if (updates.title !== undefined && updates.title.trim().length === 0) {
         ctx.status = 400;
@@ -280,15 +271,6 @@ export const createTodoRoutes = (dbService: DatabaseService): Router => {
           error: 'Todo not found',
           message: 'The requested todo does not exist',
           status: 404
-        };
-        return;
-      }
-      if (existingTodo.creatorId !== ctx.user.id) {
-        ctx.status = 403;
-        ctx.body = {
-          error: 'You can only delete your own todos',
-          message: 'Access denied. You can only delete todos you created',
-          status: 403
         };
         return;
       }
